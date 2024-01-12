@@ -1,9 +1,11 @@
 const fs = require("fs");
 const axios = require("axios");
+const path = require("path");
 
-const envFile = fs.readFileSync(".env", "utf8");
+const envPath = path.resolve(__dirname, ".env");
+const envFile = fs.readFileSync(envPath, "utf8");
 
-/** @type {{ TEMPO_ATUALIZACAO: number, DOMINIO: string, TOKEN: string }} */
+/** @type {{ TEMPO_ATUALIZACAO: number, DOMINIO: string, TOKEN: string, LOGS: string }} */
 const envVars = {};
 envFile.split("\n").forEach((line) => {
     const [key, value] = line.split("=");
@@ -15,7 +17,9 @@ async function main() {
     do {
         const ip = await meuIp(envVars.TEMPO_ATUALIZACAO);
         if (ip !== ultimoIp) {
-            await atualizar(ip).then((res) => console.warn(res));
+            await atualizar(ip).then(() =>
+                appendLog(`IP atualizado para ${ip}`)
+            );
             ultimoIp = ip;
         }
         await new Promise((r) =>
@@ -69,10 +73,35 @@ async function atualizar(fqdn) {
 
     return api
         .patch("/api/application/nodes/1", data)
-        .catch((err) => console.error(`Erro ao atualizar IP ${fqdn}: ${err}`));
+        .catch((err) =>
+            appendLog(`Erro ao atualizar IP ${fqdn}: ${err}`, "error")
+        );
+}
+
+/**
+ * @param {string} log
+ * @param { 'debug' | 'error' | 'warn' } tipo
+ */
+function appendLog(log, tipo = "debug") {
+    let prefixo = new Date().toISOString();
+    switch (tipo) {
+        case "error":
+            prefixo += " [ERROR]";
+            break;
+        case "warn":
+            prefixo += " [WARN]";
+            break;
+        default:
+            prefixo += " [DEBUG]";
+            break;
+    }
+    fs.appendFileSync(
+        envVars.LOGS ?? "atualizar-node.log",
+        `${prefixo} ${log}\n`
+    );
 }
 
 main().catch((err) => {
-    console.error(err);
+    appendLog(err, "error");
     process.exit(1);
 });
