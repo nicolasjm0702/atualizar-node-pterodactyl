@@ -15,7 +15,7 @@ envFile.split("\n").forEach((line) => {
 async function main() {
     let ultimoIp = "";
     do {
-        const ip = await meuIp(envVars.TEMPO_ATUALIZACAO);
+        const ip = await meuIp();
         if (ip !== ultimoIp) {
             await atualizar(ip).then(() =>
                 appendLog(`IP atualizado para ${ip}`)
