@@ -83,21 +83,9 @@ async function atualizar(fqdn) {
  * @param { 'debug' | 'error' | 'warn' } tipo
  */
 function appendLog(log, tipo = "debug") {
-    let prefixo = new Date().toISOString();
-    switch (tipo) {
-        case "error":
-            prefixo += " [ERROR]";
-            break;
-        case "warn":
-            prefixo += " [WARN]";
-            break;
-        default:
-            prefixo += " [DEBUG]";
-            break;
-    }
     fs.appendFileSync(
         envVars.LOGS ?? "atualizar-node.log",
-        `${prefixo} ${log}\n`
+        `${new Date().toISOString()} [${tipo.toUpperCase()}] ${log}\n`
     );
 }
 
