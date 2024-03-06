@@ -15,12 +15,16 @@ envFile.split("\n").forEach((line) => {
 async function main() {
     let ultimoIp = "";
     do {
-        const ip = await meuIp(envVars.TEMPO_ATUALIZACAO);
-        if (ip !== ultimoIp) {
-            await atualizar(ip).then(() =>
-                appendLog(`IP atualizado para ${ip}`)
-            );
-            ultimoIp = ip;
+        try {
+            const ip = await meuIp(envVars.TEMPO_ATUALIZACAO);
+            if (ip !== ultimoIp) {
+                await atualizar(ip).then(() =>
+                    appendLog(`IP atualizado para ${ip}`)
+                );
+                ultimoIp = ip;
+            }
+        } catch (e) {
+            appendLog(`Erro ao atualizar IP: ${e}`, "error");
         }
         await new Promise((r) =>
             setTimeout(r, envVars.TEMPO_ATUALIZACAO * 60 * 1000)
