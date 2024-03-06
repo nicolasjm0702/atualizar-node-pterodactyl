@@ -50,7 +50,7 @@ async function atualizar(fqdn) {
     },
   })
     .then((res) => res.json())
-    .then((res) => res.data.attributes)
+    .then((res) => res.attributes)
     .catch((err) => appendLog(`Erro ao atualizar IP ${fqdn}: ${err}`, "error"));
 
   data = {
