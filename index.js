@@ -1,5 +1,4 @@
 const fs = require("fs");
-const axios = require("axios");
 const path = require("path");
 
 const envPath = path.resolve(__dirname, ".env");
@@ -45,18 +44,21 @@ async function meuIp() {
 async function atualizar(fqdn) {
     if (!fqdn) return new Promise((r) => r());
 
-    const api = axios.create({
-        baseURL: `http://${envVars.DOMINIO}`,
-        headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${envVars.TOKEN}`,
-        },
-    });
-
-    let data = await api
-        .get("/api/application/nodes/1")
-        .then((res) => res.data.attributes);
+    let data = await fetch(
+        `http://${envVars.DOMINIO}/api/application/nodes/1`,
+        {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${envVars.TOKEN}`,
+            },
+        }
+    )
+        .then((res) => res.json())
+        .then((res) => res.data.attributes)
+        .catch((err) =>
+            appendLog(`Erro ao atualizar IP ${fqdn}: ${err}`, "error")
+        );
 
     data = {
         name: data.name,
@@ -75,11 +77,17 @@ async function atualizar(fqdn) {
         daemon_listen: data.daemon_listen,
     };
 
-    return api
-        .patch("/api/application/nodes/1", data)
-        .catch((err) =>
-            appendLog(`Erro ao atualizar IP ${fqdn}: ${err}`, "error")
-        );
+    return fetch(`http://${envVars.DOMINIO}/api/application/nodes/1`, {
+        method: "PATCH",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${envVars.TOKEN}`,
+        },
+        body: JSON.stringify(data),
+    }).catch((err) =>
+        appendLog(`Erro ao atualizar IP ${fqdn}: ${err}`, "error")
+    );
 }
 
 /**
